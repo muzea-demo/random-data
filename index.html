@@ -5,24 +5,57 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
+    crossorigin="anonymous">
   <title>random-data</title>
 </head>
 
-<body>
-<textarea style="min-height: 300px; min-width: 200px;" id="input">constraint n int 5 10
-constraint a int 1 n
-constraint b int 5 1000
-constraint c int 5 10000
+<body style="text-align: center;">
+  <textarea style="min-height: 300px; min-width: 400px;" id="input"></textarea>
+  <br /><button class="pure-button pure-button-primary" id="click" style="margin: 8px 0">随机一个</button><br />
+  <textarea style="min-height: 300px; min-width: 400px;" id="output"></textarea>
+  <hr />
+  <div style="width: 61vw; margin: 0 auto;">
+    <pre style="text-align: left;">
+现在只支持两种语句
+constraint 约束 限制变量取值
+repeat 重复 会输出内容
+
+重要 每一个变量都需要有约束
+
+constraint 的语法
+constraint 变量名 类型 最小值 最大值
+变量名 最好都是字母
+类型 现在只有 int
+最小值和最大值可以是别的变量名
+区间是左闭右开
+
+repeat 的语法
+repeat 重复次数 重复的内容
+重复次数 可以是一个数字，也可以是一个变量
+
+举个例子，假如我们的数据是
+第一行输入一个n，代表接下来有n行数据，每行数据有三个数a b c
+那么就是
 repeat 1 ${n}
 repeat n ${a} ${b} ${c}
-</textarea>
-  <br />
-  <button id="click">随机一个</button>
-  <br />
-  <textarea style="min-height: 300px; min-width: 200px;" id="output"></textarea>
+然后补充一下约束就好了
+
+程序没有检查输入是否合法，所以需要你自己注意一下 :)
+    </pre>
+  </div>
+
 </body>
 <script type="module">
   import { parse, generator } from './main.js'
+  let initValue = ''
+  initValue += 'constraint n int 5 10\n';
+  initValue += 'constraint a int 1 n\n';
+  initValue += 'constraint b int 5 1000\n';
+  initValue += 'constraint c int 5 10000\n';
+  initValue += 'repeat 1 ${n}\n';
+  initValue += 'repeat n ${a} ${b} ${c}\n';
+  document.querySelector('#input').value = initValue;
   function handleClick() {
     const ret = parse(document.querySelector('#input').value);
     document.querySelector('#output').value = generator(...ret);
