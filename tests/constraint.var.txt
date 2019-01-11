@@ -1,0 +1,6 @@
+constraint n int 5 10
+constraint a int 1 n
+constraint b int 5 1000
+constraint c int 5 10000
+repeat 1 ${n}
+repeat n ${a} ${b} ${c}
