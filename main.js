@@ -5,8 +5,8 @@
 
 /**
  * repeat group n
- * line
- * line
+ * repeat line
+ * repeat line
  * end group
  */
 
@@ -14,7 +14,7 @@
 /**
  * {
  *   type: 'line'
- *   repeat?: string
+ *   repeat: string
  *   template: string,
  * }
  * 
@@ -87,8 +87,12 @@ function parse(input) {
         index += 1;
         while (!isGroupEnd(list[index])) {
           const repeatLine = list[index];
+          const repeatStart = 'repeat '.length;
+          const repeatEnd = repeatLine.indexOf(' ', repeatStart);
+          const repeat = repeatLine.substr(repeatStart, repeatEnd - repeatStart);
           children.push({
-            template: repeatLine,
+            template: repeatLine.substr(repeatEnd + 1),
+            repeat: repeat,
             type: 'line'
           });
           index += 1;
@@ -159,15 +163,31 @@ function generator(list, constraint) {
     return getValue(store, name);
   }
 
+  function valueOfTemplate(store, template) {
+    return template.replace(/\${(.+?)}/g, (_, name) => {
+      return getRandomValue(store, name);
+    })
+  }
+
   const repeator = {
     line(store, repeat, template) {
       let i = 0;
       let ret = '';
       while (i !== repeat) {
-        ret += template.replace(/\${(.+?)}/g, (_, name) => {
-          return getRandomValue(store, name);
-        })
+        ret += valueOfTemplate(store, template)
         ret += '\n';
+        i += 1;
+      }
+      return ret;
+    },
+    group(store, repeat, children) {
+      let i = 0;
+      let ret = '';
+      while (i !== repeat) {
+        children.forEach((item) => {
+          const repeat = getValueFromString(store, item.repeat);
+          ret += repeator.line(store, repeat, item.template);
+        })
         i += 1;
       }
       return ret;
@@ -181,6 +201,12 @@ function generator(list, constraint) {
       case 'line': {
         const repeat = getValueFromString(store, item.repeat);
         ret += repeator.line(store, repeat, item.template);
+        break;
+      }
+      case 'group': {
+        const repeat = getValueFromString(store, item.repeat);
+        ret += repeator.group(store, repeat, item.children);
+        break;
       }
     }
   })

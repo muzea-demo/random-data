@@ -30,8 +30,16 @@ constraint 变量名 类型 最小值 最大值
 最小值和最大值可以是别的变量名
 区间是左闭右开
 
-repeat 的语法
+repeat line 的语法
 repeat 重复次数 重复的内容
+重复次数 可以是一个数字，也可以是一个变量
+
+repeat group 的语法
+repeat group 重复次数
+repeat line
+repeat line
+repeat line
+end group
 重复次数 可以是一个数字，也可以是一个变量
 
 举个例子，假如我们的数据是
@@ -40,6 +48,23 @@ repeat 重复次数 重复的内容
 repeat 1 ${n}
 repeat n ${a} ${b} ${c}
 然后补充一下约束就好了
+
+再举一个例子
+假如我们的数据是这个样子的
+第一行是n，代表接下来有n组数据
+每组数据的第一行有三个数row min max，代表接下来有row个数字，每个数字的取值是 [min, max)
+那我们可以这样写
+
+constraint n int 5 10
+constraint row int 10 20
+constraint min int 150 200
+constraint max int 500 1000
+constraint num int min max
+repeat 1 ${n}
+repeat group n
+repeat 1 ${row} ${min} ${max}
+repeat row ${num}
+end group
 
 程序没有检查输入是否合法，所以需要你自己注意一下 :)
     </pre>
