@@ -51,6 +51,7 @@ function parse(input) {
   const ret = [];
   /**
    * constraint n int lower higher
+   * constraint n set value1 value2 value3
    * @todo constraint n float lower higher length
    * 
    * key is name
@@ -64,7 +65,14 @@ function parse(input) {
   function addIntConstraint(name, [lower, higher]) {
     constraint[name] = {
       lower: lower,
-      higher: higher
+      higher: higher,
+      type: 'int'
+    };
+  }
+  function addSetConstraint(name, list) {
+    constraint[name] = {
+      list: list,
+      type: 'set'
     };
   }
   const list = input.split('\n');
@@ -77,6 +85,10 @@ function parse(input) {
         const [_, name, type, ...other] = line.split(' ');
         if (type === 'int') {
           addIntConstraint(name, other);
+          break;
+        }
+        if (type === 'set') {
+          addSetConstraint(name, other);
           break;
         }
         break;
@@ -126,11 +138,17 @@ function parse(input) {
 }
 
 function isNumberString(str) {
-  return /^\d+$/.test(str)
+  return /^-?\d+$/.test(str)
 }
 
 function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min)) + min;
+  let fix = 0;
+  if (min < 0) {
+    fix = min;
+    min = 0;
+    max -= fix;
+  }
+  return Math.floor(Math.random() * (max - min)) + min + fix;
 }
 
 function generator(list, constraint) {
@@ -138,12 +156,22 @@ function generator(list, constraint) {
   // 根据约束 产生一个随机值
   function getRandomValue(store, name) {
     const constraintItem = constraint[name];
+    let value = null;
+    switch (constraintItem.type) {
+      case 'int': {
+        const { lower, higher } = constraintItem;
+        const min = getValueFromString(store, lower);
+        const max = getValueFromString(store, higher);
+        value = getRandomInt(min, max);
+        break;
+      }
+      case 'set': {
+        const { list } = constraintItem;
+        value = list[getRandomInt(0, list.length)];
+        break;
+      }
+    }
 
-    // int
-    const { lower, higher } = constraintItem;
-    const min = getValueFromString(store, lower);
-    const max = getValueFromString(store, higher);
-    const value = getRandomInt(min, max);
     store[name] = value;
     return value;
   }

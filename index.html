@@ -24,17 +24,34 @@ repeat 重复 会输出内容
 重要 每一个变量都需要有约束
 
 constraint 的语法
-constraint 变量名 类型 最小值 最大值
-变量名 最好都是字母
-类型 现在只有 int
+
+int类型
+constraint 变量名 int 最小值 最大值
+比如
+constraint n int 1 233
+变量名 最好都是字母（汉字也行）
 最小值和最大值可以是别的变量名
 区间是左闭右开
 
-repeat line 的语法
+set类型
+constraint 变量名 set value1 value2 value3
+比如
+constraint 数字 set 一 二 三 四
+value之间使用空格分隔
+
+repeat 的语法
+
+line类型
 repeat 重复次数 重复的内容
 重复次数 可以是一个数字，也可以是一个变量
+从紧跟 重复次数 的空格后面开始，到这一行结束都会被视为一个模板，我们使用 ${变量名} 来引用一个变量
+比如
+repeat 1 ${n}
+亦或者
+repeat 1 prefix string ${n}
+都是被允许的
 
-repeat group 的语法
+group类型
 repeat group 重复次数
 repeat line
 repeat line
@@ -65,6 +82,13 @@ repeat group n
 repeat 1 ${row} ${min} ${max}
 repeat row ${num}
 end group
+
+来一个set的例子
+
+constraint 姓 set 赵 钱 孙 李
+constraint 名 set 一 二 三 四
+repeat 10 ${姓}${名}
+
 
 程序没有检查输入是否合法，所以需要你自己注意一下 :)
     </pre>
