@@ -5,12 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w"
-    crossorigin="anonymous">
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" crossorigin="anonymous"/>
+  <style>
+    .github-fork-ribbon:before {
+      background-color: #333;
+    }
+  </style>
   <title>random-data</title>
 </head>
 
-<body style="text-align: center;">
+<body style="text-align: center; padding: 24px 0">
   <textarea style="min-height: 300px; min-width: 400px;" id="input"></textarea>
   <br /><button class="pure-button pure-button-primary" id="click" style="margin: 8px 0">随机一个</button><br />
   <textarea style="min-height: 300px; min-width: 400px;" id="output"></textarea>
@@ -93,7 +98,7 @@ repeat 10 ${姓}${名}
 程序没有检查输入是否合法，所以需要你自己注意一下 :)
     </pre>
   </div>
-
+  <a class="github-fork-ribbon" href="https://github.com/muzea-demo/random-data" data-ribbon="F**k me on GitHub" title="F**k me on GitHub">F**k me on GitHub</a>
 </body>
 <script type="module">
   import { parse, generator } from './main.js'
