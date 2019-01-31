@@ -29,20 +29,39 @@
  */
 
 
+function isString(maybe) {
+  return (typeof maybe) === 'string';
+}
+
+const Flag = {
+  shuffle = 'shuffle',
+};
+
+function parseFlag(flagPart) {
+  const ret = {};
+  if (isString(flagPart)) {
+    flagPart.split(' ').forEach((flagItem) => {
+      const key = flagItem.trim();
+      ret[key] = true
+    });
+  }
+  return ret;
+}
+
 function isConstraint(line) {
-  return line.startsWith('constraint')
+  return line.startsWith('constraint');
 }
 
 function isRepeat(line) {
-  return line.startsWith('repeat')
+  return line.startsWith('repeat');
 }
 
 function isRepeatGroup(line) {
-  return line.startsWith('repeat group')
+  return line.startsWith('repeat group');
 }
 
 function isGroupEnd(line) {
-  return line.startsWith('end group')
+  return line.startsWith('end group');
 }
 
 const repeatGroupStartLength = 'repeat group '.length;
@@ -50,9 +69,11 @@ const repeatGroupStartLength = 'repeat group '.length;
 function parse(input) {
   const ret = [];
   /**
-   * constraint n int lower higher
-   * constraint n set value1 value2 value3
+   * constraint n int lower higher | flags
+   * constraint n set values | flags
    * @todo constraint n float lower higher length
+   * 
+   * flags   shuffle
    * 
    * key is name
    * {
@@ -89,7 +110,8 @@ function parse(input) {
     const line = list[index];
     while (true) {
       if (isConstraint(line)) {
-        const [_, name, type, ...other] = line.split(' ');
+        const [definePart, flagsPart] = line.split('|');
+        const [_, name, type, ...other] = definePart.split(' ');
         if (type === 'int') {
           addIntConstraint(name, other);
           break;
