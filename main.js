@@ -75,6 +75,13 @@ function parse(input) {
       type: 'set'
     };
   }
+  function addGraphConstraint(name, [pointNum, edgeNum]) {
+    constraint[name] = {
+      pointNum,
+      edgeNum,
+      type: 'graph'
+    };
+  }
   const list = input.split('\n');
   let index = 0;
   const end = list.length;
@@ -89,6 +96,10 @@ function parse(input) {
         }
         if (type === 'set') {
           addSetConstraint(name, other);
+          break;
+        }
+        if (type === 'graph') {
+          addGraphConstraint(name, other);
           break;
         }
         break;
@@ -170,10 +181,36 @@ function generator(list, constraint) {
         value = list[getRandomInt(0, list.length)];
         break;
       }
+      case 'graph': {
+        value = getRandomGraph(store, constraintItem);
+        break;
+      }
     }
 
     store[name] = value;
     return value;
+  }
+
+  function getRandomGraph(store, config) {
+    const ret = []
+    const { pointNum, edgeNum } = config;
+    const pointValue = getValueFromString(store, pointNum);
+    const edgeValue = getValueFromString(store, edgeNum);
+    let index = 0;
+    while (index < edgeValue) {
+      let v1;
+      let v2;
+      v1 = getRandomInt(1, pointValue);
+      if (v1 === (pointValue - 1)) {
+        v2 = pointValue;
+      } else {
+        v2 = getRandomInt(v1 + 1, pointValue + 1)
+      }
+      ret.push(`${v1} ${v2}`)
+      index += 1;
+    }
+
+    return ret.join('\n')
   }
 
   // 获取一个值 没有的话就随机一个
