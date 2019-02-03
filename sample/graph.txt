@@ -1,0 +1,6 @@
+constraint N int 10 15
+constraint M int N 2*N
+constraint c int 1 N | shuffle
+constraint g graph 1 N M
+repeat 1 ${N} ${M} ${c} ${c}
+repeat 1 ${g}

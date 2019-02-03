@@ -1,0 +1,19 @@
+{
+  "name": "random-data",
+  "version": "0.0.0-dev",
+  "description": "随机数据产生姬",
+  "main": "cli.js",
+  "scripts": {
+    "random": "node --experimental-modules ./cli.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muzea-demo/random-data.git"
+  },
+  "author": "muzea <mr.muzea@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/muzea-demo/random-data/issues"
+  },
+  "homepage": "https://github.com/muzea-demo/random-data#readme"
+}
