@@ -12,31 +12,11 @@
 - [案例](#案例)
   - [普通案例](#普通案例)
   - [sql测试数据](#sql测试数据)
+- [高级用法](#高级用法)
 - [更新计划](#更新计划)
+- [其他](#其他)
 
 ## 语法
-
-假装自己有个 CFG
-
-```bnf
-template      = *[statement 1*breakLine]
-breakLine     = "\n"
-statement     = constraint | repeat
-constraint    = intConstraint | setConstraint
-intConstraint = "constraint" " " varName " " "int" " " number " " number
-setConstraint = "constraint" " " varName " " "set" " " setValues
-setValues     = stringValue [ " " setValues ]
-repeat        = repeatLine | repeatGroup
-repeatLine    = "repeat" " " varName|number " " repeatContent
-repeatGroup   = "repeat group" " " varName|number breakLine *[ repeatLine breakLine ] "end group"
-repeatContent = (utf8char - "$") | ( "${" varName "}" ) *repeatContent
-varName       = stringValue
-number        = 1*digit
-digit         = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-stringValue   = 1*utf8char
-```
-
-
 
 现在只支持两种语句
 
@@ -164,6 +144,16 @@ repeat 10 INSERT INTO list (name, value, status) VALUES ("${姓}${名}", ${value
 
 **程序没有检查输入是否合法，所以需要你自己注意一下 :)**
 
+## 高级用法
+
+图、flags 这些的使用，参见 [高级用法](ADVANCED.md)
+
 ## 更新计划
 
 不存在的
+
+## 其他
+
+这个轮子的目的是设计一个足够简单的工具来生成数据，这也就意味着她不能支持所有的场景，也不能对数据做高度定制。
+
+如果有这种需求的话，应该自己写代码，或者使用类似 [CYaRon](https://github.com/luogu-dev/cyaron) 的工具。

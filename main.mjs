@@ -39,7 +39,9 @@ function parseFlag(flagPart) {
   if (isString(flagPart)) {
     flagPart.split(' ').forEach((flagItem) => {
       const key = flagItem.trim();
-      ret[key] = true
+      if (key) {
+        ret[key] = true;
+      }
     });
   }
   return ret;
