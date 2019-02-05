@@ -51,10 +51,32 @@ function range(start, end) {
   return ret;
 }
 
+let _global;
+try {
+  _global = global;
+} catch (error) {
+  _global = window;
+}
+
+function valueOf(expStr, getValue) {
+  const func = new Function('env', `with(env){return ${expStr}}`);
+  const env = new Proxy({}, {
+    get: function(_, key){
+      const value = getValue(key);
+      return (value ? value : _global[key]);
+    },
+    has: function (_, key) {
+      return true;
+    },
+  });
+  return func(env);
+}
+
 export {
   shuffleArray,
   getRandomInt,
   isNumberString,
   isString,
+  valueOf,
   range
 }

@@ -1,4 +1,4 @@
-import { shuffleArray, isString, getRandomInt, isNumberString, range } from './lib.mjs'
+import { shuffleArray, isString, getRandomInt, isNumberString, range, valueOf } from './lib.mjs'
 
 /**
  * repeat n CONTENT
@@ -278,6 +278,11 @@ function generator(list, constraint) {
 
   // 根据约束 产生一个随机值
   function getRandomValue(store, name) {
+    if (!(name in constraint)) {
+      // 一个变量不存在，应该直接返回
+      // 这个时候 getValue 会返回 undefined
+      return;
+    }
     const constraintItem = constraint[name];
     let value = null;
     switch (constraintItem.type) {
@@ -353,32 +358,16 @@ function generator(list, constraint) {
   // 获取一个值 没有的话就随机一个
   function getValue(store, name) {
     if (!store.hasOwnProperty(name)) {
-      store[name] = getRandomValue(store, name);
+      getRandomValue(store, name);
     }
     return store[name];
   }
 
   function getValueFromString(store, name) {
-    if (isNumberString(name)) {
-      return parseInt(name, 10);
-    }
-    // 支持运算，这个就比较复杂了 目前只支持运算一次，仅限于 int 类型
-    // 拙劣的实现 见笑了
-    // 运算符一般不是第一个字符
-    if (name.indexOf('*') > 0) {
-      const [v1, v2] = name.split('*');
-      return getValueFromString(store, v1) * getValueFromString(store, v2);
-    }
-    if (name.indexOf('+') > 0) {
-      const [v1, v2] = name.split('+');
-      return getValueFromString(store, v1) + getValueFromString(store, v2);
-    }
-    if (name.indexOf('-') > 0) {
-      const [v1, v2] = name.split('-');
-      return getValueFromString(store, v1) - getValueFromString(store, v2);
-    }
-    // 暂时没有除法
-    return getValue(store, name);
+    const handler = (varName) => {
+      return getValue(store, varName);
+    };
+    return valueOf(name, handler);
   }
 
   function valueOfTemplate(store, template) {
