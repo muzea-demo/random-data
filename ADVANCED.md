@@ -56,4 +56,12 @@ constraint g graph graphNum nodeNum edgeNum
 - `nodeNum` 这个图里面有几个顶点
 - `edgeNum` 这个图里面有几个边
 
+虽然说 `graphNum` 也可以是别的数字，但是这个会导致一些问题，
+
+比如分割后的几个图没法生成足够的边，无法满足 `edgeNum` （不分割的时候也会有这个问题）
+
+所以在有图类型的时候，会出现抛出异常的情况 (*ゝω・)ﾉ
+
 示例参见 [graph](sample/graph.txt)
+
+也可以参考一个 [可视化的demo](graph.html)
