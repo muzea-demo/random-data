@@ -1,6 +1,7 @@
 /**
  * Randomize array element order in-place.
  * Using Durstenfeld shuffle algorithm.
+ * @param {any[]} array
  */
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
@@ -14,10 +15,6 @@ function shuffleArray(array) {
 
 function isString(maybe) {
   return (typeof maybe) === 'string';
-}
-
-function isNumberString(str) {
-  return /^-?\d+$/.test(str)
 }
 
 /**
@@ -51,6 +48,26 @@ function range(start, end) {
   return ret;
 }
 
+/**
+ * 分割数组里面的元素
+ * @param {number[]} list
+ * @param {number} num 要分割成几份
+ * @return {number[][]}
+ */
+function splitArray(list, num) {
+  const indexList = range(1, list.length);
+  shuffleArray(indexList);
+  const usedIndex = indexList.slice(0, num - 1).sort();
+  const ret = [];
+  let start = 0;
+  usedIndex.forEach((value) => {
+    ret.push(list.slice(start, value));
+    start = value;
+  });
+  ret.push(list.slice(start));
+  return ret;
+}
+
 let _global;
 try {
   _global = global;
@@ -75,8 +92,8 @@ function valueOf(expStr, getValue) {
 export {
   shuffleArray,
   getRandomInt,
-  isNumberString,
   isString,
   valueOf,
-  range
+  range,
+  splitArray
 }

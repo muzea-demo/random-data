@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.2/gh-fork-ribbon.min.css" crossorigin="anonymous"/>
+  <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g6-2.2.0/build/g6.js"></script>
+  <script src="https://gw.alipayobjects.com/os/antv/assets/lib/d3-4.13.0.min.js"></script>  
+  <style>
+    .github-fork-ribbon:before {
+      background-color: #333;
+    }
+  </style>
+  <title>random-data - graph demo</title>
+</head>
+
+<body style="text-align: center; padding: 24px 0">
+  <textarea style="min-height: 300px; min-width: 400px;" disabled id="input"></textarea>
+  <br /><button class="pure-button pure-button-primary" id="click" style="margin: 8px 0">随机一个</button><br />
+  <textarea style="min-height: 300px; min-width: 400px;" disabled id="output"></textarea>
+  <hr />
+  <br /><button class="pure-button pure-button-primary" id="draw" style="margin: 8px 0">画一个</button><br />
+  <div id="mountNode"></div>
+  <a class="github-fork-ribbon" href="https://github.com/muzea-demo/random-data" data-ribbon="F**k me on GitHub" title="F**k me on GitHub">F**k me on GitHub</a>
+</body>
+<script type="module">
+  import { parse, generator } from './main.mjs';
+  let initValue = '';
+  initValue += 'constraint N int 10 15\n';
+  initValue += 'constraint M int N 2*N\n';
+  initValue += 'constraint c int 1 N | shuffle\n';
+  initValue += 'constraint g graph 1 N M\n';
+  initValue += 'repeat 1 ${N} ${M} ${c} ${c}\n';
+  initValue += 'repeat 1 ${g}\n';
+  document.querySelector('#input').value = initValue;
+  function handleClick() {
+    const ret = parse(initValue);
+    try {
+      document.querySelector('#output').value = generator(...ret);
+    } catch (error) {
+      window.alert(error);
+    }
+  }
+  const graph = new G6.Graph({
+    container: 'mountNode',
+    width: 500,
+    height: 500
+  });
+  function getPoint(w, l, nodeNum, index) {
+    if (index === 1) {
+      return [l + w, 0 + w];
+    }
+    const per = (2 * Math.PI) / nodeNum;
+    const deg = per * (index - 1);
+    return [Math.floor(l * Math.cos(deg) + w), Math.floor(l * Math.sin(deg) + w)];
+  }
+  function parseStr(str) {
+    const list = str.split('\n').filter(it => it);
+    let [nodeNum, edgeNum, c1, c2] = list[0].split(' ');
+    nodeNum = parseInt(nodeNum, 10);
+    edgeNum = parseInt(edgeNum, 10);
+    c1 = parseInt(c1, 10);
+    c2 = parseInt(c2, 10);
+    const data = {};
+    data.nodes = [];
+    data.edges = [];
+    let i = 0;
+    while (i !== nodeNum) {
+      i += 1;
+      const [x, y] = getPoint(250, 200, nodeNum, i);
+      if (i === c1) {
+        data.nodes.push({
+          id: `${i}`,
+          label: `${i}(c1)`,
+          x,
+          y,
+        });
+        continue;
+      }
+      if (i === c2) {
+        data.nodes.push({
+          id: `${i}`,
+          label: `${i}(c2)`,
+          x,
+          y,
+        });
+        continue;
+      }
+      data.nodes.push({
+        id: `${i}`,
+        label: `${i}`,
+        x,
+        y,
+      });
+    }
+    i = 1;
+    while (i !== list.length) {
+      const [target, source] = list[i].split(' ');
+      data.edges.push({
+        id: `edge${i}`,
+        target,
+        source
+      });
+      i += 1;
+    }
+    return data;
+  }
+  function handleDraw () {
+    const strData = document.querySelector('#output').value;
+    if (strData && strData.length) {
+      graph.read(parseStr(strData));
+    } else {
+      alert('先随机一个数据嘛');
+    }
+  }
+  document.querySelector('#click').addEventListener('click', handleClick);
+  document.querySelector('#draw').addEventListener('click', handleDraw);
+</script>
+
+</html>

@@ -112,7 +112,11 @@ repeat 10 ${姓}${名}
   document.querySelector('#input').value = initValue;
   function handleClick() {
     const ret = parse(document.querySelector('#input').value);
-    document.querySelector('#output').value = generator(...ret);
+    try {
+      document.querySelector('#output').value = generator(...ret);
+    } catch (error) {
+      window.alert(error);
+    }
   }
   document.querySelector('#click').addEventListener('click', handleClick);
 </script>

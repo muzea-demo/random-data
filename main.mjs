@@ -1,4 +1,4 @@
-import { shuffleArray, isString, getRandomInt, isNumberString, range, valueOf } from './lib.mjs'
+import { shuffleArray, isString, getRandomInt, range, valueOf, splitArray } from './lib.mjs'
 
 /**
  * repeat n CONTENT
@@ -189,6 +189,10 @@ function hasEdge(edgeList, edge) {
   })
 }
 
+function maxEdge(nodeNum) {
+  return (nodeNum * (nodeNum - 1)) / 2;
+}
+
 /**
  * 给定顶点的集合，边的数量，返回一个边的集合
  * 这个图是一个联通图
@@ -199,9 +203,11 @@ function hasEdge(edgeList, edge) {
 function getRandomSubGraph(nodeList, edgeNumber) {
   const ret = [];
   const nodeCount = nodeList.length;
-  const maxEdgeCount = (nodeCount * (nodeCount - 1)) / 2;
+  const maxEdgeCount = maxEdge(nodeCount);
   const neededEdgeCount = edgeNumber;
   if (neededEdgeCount >= maxEdgeCount) {
+    // 这里是数据错误，其实是不对的
+    throw new Error('边的数量过大 无法生成图');
     // 全联通图
     let index = 0;
     while (index !== nodeCount) {
@@ -228,7 +234,7 @@ function getRandomSubGraph(nodeList, edgeNumber) {
   let index = 1;
   // 剩余节点数量
   let remainder = nodeList.length - 1;
-  while (prevParentIndex !== index && remainder) {
+  while (remainder) {
     const currentValue = sa[prevParentIndex];
     const childCount = getRandomInt(1, remainder + 1);
     let childIndex = 0;
@@ -344,14 +350,54 @@ function generator(list, constraint) {
 
   function getRandomGraph(store, config) {
     let ret = '';
-    const { nodeNum, edgeNum } = config;
+    const { nodeNum, edgeNum, graphNum } = config;
+    const graphValue = getValueFromString(store, graphNum);
     const nodeValue = getValueFromString(store, nodeNum);
     const edgeValue = getValueFromString(store, edgeNum);
     const nodeList = range(1, nodeValue + 1);
-    const edgeList = getRandomSubGraph(nodeList, edgeValue);
-    edgeList.forEach((edge) => {
-      ret += `${edge[0]} ${edge[1]}\n`;
-    });
+    // 等一个优雅的可以指定每个图有多少边的语法
+    if (graphValue > 1) {
+      getRandomSubGraph(nodeList, edgeValue).forEach((edge) => {
+        ret += `${edge[0]} ${edge[1]}\n`;
+      });
+    } else {
+      const nodeListArr = splitArray(nodeList, graphValue);
+      // 检查这个分法是不是可以满足边的约束
+      let allEdge = 0;
+      nodeListArr.forEach((list) => {
+        allEdge += maxEdge(list.length);
+      });
+      if (allEdge < edgeValue) {
+        throw new Error('边的数量过多 无法生成满足约束的图');
+      }
+      const p = edgeValue / allEdge;
+      const usedEdge = 0;
+      nodeListArr.forEach((list, index) => {
+        const isLast = index === (nodeListArr.length - 1);
+        const subMaxEdge = maxEdge(list.length);
+        if (subMaxEdge === 0 || edgeValue === usedEdge) {
+          return;
+        }
+        if (isLast) {
+          getRandomSubGraph(list, edgeValue - usedEdge).forEach((edge) => {
+            ret += `${edge[0]} ${edge[1]}\n`;
+          });
+        } else {
+          const subRealEdge = Math.min(subMaxEdge, Math.ceil(p * subMaxEdge));
+          if ((subRealEdge + usedEdge) > edgeValue) {
+            getRandomSubGraph(list, edgeValue - usedEdge).forEach((edge) => {
+              ret += `${edge[0]} ${edge[1]}\n`;
+            });
+            usedEdge = edgeValue;
+          } else {
+            usedEdge += subRealEdge;
+            getRandomSubGraph(list, subRealEdge).forEach((edge) => {
+              ret += `${edge[0]} ${edge[1]}\n`;
+            });
+          }
+        }
+      });
+    }
     return ret;
   }
 
