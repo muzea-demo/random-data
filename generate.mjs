@@ -30,7 +30,7 @@ function getRandomSubGraph(nodeList, edgeNumber) {
   const nodeCount = nodeList.length;
   const maxEdgeCount = maxEdge(nodeCount);
   const neededEdgeCount = edgeNumber;
-  if (neededEdgeCount >= maxEdgeCount) {
+  if (neededEdgeCount > maxEdgeCount) {
     // 这里是数据错误，其实是不对的
     throw new Error('边的数量过大 无法生成图');
   }
@@ -187,12 +187,16 @@ function generate(list, constraint) {
         const isLast = index === (nodeListArr.length - 1);
         const subMaxEdge = maxEdge(list.length);
         if (subMaxEdge === 0 || edgeValue === usedEdge) {
-          return;
+          if (list.length === 1) {
+            return;
+          }
+          throw new Error('每一个子图都应该是联通的');
         }
         if (isLast) {
           Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge));
         } else {
-          const subRealEdge = Math.min(subMaxEdge, Math.ceil(p * subMaxEdge));
+          let subRealEdge = Math.min(subMaxEdge, Math.floor(p * subMaxEdge));
+          subRealEdge = Math.max(subRealEdge, list.length - 1);
           if ((subRealEdge + usedEdge) > edgeValue) {
             Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge));
             usedEdge = edgeValue;
