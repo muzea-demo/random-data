@@ -169,7 +169,7 @@ function generate(list, constraint) {
     const edgeValue = getValueFromString(store, edgeNum);
     const nodeList = range(1, nodeValue + 1);
     // 等一个优雅的可以指定每个图有多少边的语法
-    if (graphValue > 1) {
+    if (graphValue === 1) {
       Array.prototype.push.apply(ret, getRandomSubGraph(nodeList, edgeValue));
     } else {
       const nodeListArr = splitArray(nodeList, graphValue);
@@ -182,7 +182,7 @@ function generate(list, constraint) {
         throw new Error('边的数量过多 无法生成满足约束的图');
       }
       const p = edgeValue / allEdge;
-      const usedEdge = 0;
+      let usedEdge = 0;
       nodeListArr.forEach((list, index) => {
         const isLast = index === (nodeListArr.length - 1);
         const subMaxEdge = maxEdge(list.length);
