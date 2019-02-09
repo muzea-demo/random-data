@@ -18,17 +18,18 @@
 </head>
 
 <body style="text-align: center; padding: 24px 0">
-  <p><a href="https://www.luogu.org/problemnew/show/P1345" target="__blank">这个数据来自这个题目</a></p>
-  <textarea style="min-height: 300px; min-width: 400px;" disabled id="input"></textarea>
+  <p><a href="https://www.luogu.org/problemnew/show/P1345" target="__blank">默认的模板是对应这个题目</a></p>
+  <textarea style="min-height: 300px; min-width: 400px;" id="input"></textarea>
   <br /><button class="pure-button pure-button-primary" id="click" style="margin: 8px 0">随机一个</button><br />
   <textarea style="min-height: 300px; min-width: 400px;" disabled id="output"></textarea>
   <hr />
-  <br /><button class="pure-button pure-button-primary" id="draw" style="margin: 8px 0">画一个</button><br />
   <div id="mountNode"></div>
   <a class="github-fork-ribbon" href="https://github.com/muzea-demo/random-data" data-ribbon="F**k me on GitHub" title="F**k me on GitHub">F**k me on GitHub</a>
 </body>
 <script type="module">
-  import { parse, generator } from './main.mjs';
+  import { parse } from './parse.mjs'
+  import { generate } from './generate.mjs'
+  import { stringify } from './stringify.mjs'
   let initValue = '';
   initValue += 'constraint N int 10 15\n';
   initValue += 'constraint M int N 2*N\n';
@@ -38,10 +39,13 @@
   initValue += 'repeat 1 ${g}\n';
   document.querySelector('#input').value = initValue;
   function handleClick() {
-    const ret = parse(initValue);
+    const ret = parse(document.querySelector('#input').value);
     try {
-      document.querySelector('#output').value = generator(...ret);
+      const list = generate(...ret);
+      handleDraw(list);
+      document.querySelector('#output').value = stringify(list);
     } catch (error) {
+      console.error(error);
       window.alert(error);
     }
   }
@@ -50,75 +54,61 @@
     width: 500,
     height: 500
   });
-  function getPoint(w, l, nodeNum, index) {
+  function getPoint(x, y, l, nodeNum, index) {
     if (index === 1) {
-      return [l + w, 0 + w];
+      return [l + x, y];
     }
     const per = (2 * Math.PI) / nodeNum;
     const deg = per * (index - 1);
-    return [Math.floor(l * Math.cos(deg) + w), Math.floor(l * Math.sin(deg) + w)];
+    return [Math.floor(l * Math.cos(deg) + x), Math.floor(l * Math.sin(deg) + y)];
   }
-  function parseStr(str) {
-    const list = str.split('\n').filter(it => it);
-    let [nodeNum, edgeNum, c1, c2] = list[0].split(' ');
-    nodeNum = parseInt(nodeNum, 10);
-    edgeNum = parseInt(edgeNum, 10);
-    c1 = parseInt(c1, 10);
-    c2 = parseInt(c2, 10);
+  function handleDraw (list) {
+    const needDraw = [];
+    list.forEach(({ values }) => {
+      values.forEach((value) => {
+        if (value.type === 'graph') {
+          needDraw.push(value);
+        }
+      });
+    });
+    const end = needDraw.length;
+    if (end === 0) {
+      graph.changeSize(500, 500);
+      graph.read({
+        nodes: [],
+        edges: [],
+      });
+      return;
+    }
     const data = {};
     data.nodes = [];
     data.edges = [];
     let i = 0;
-    while (i !== nodeNum) {
-      i += 1;
-      const [x, y] = getPoint(250, 200, nodeNum, i);
-      if (i === c1) {
+    while (i !== end) {
+      const item = needDraw[i];
+      const totalNode = item.nodeList.length;
+      item.nodeList.forEach((nodeNum) => {
+        const [x, y] = getPoint(250, 250 + 500 * i, 200, totalNode, nodeNum);
         data.nodes.push({
-          id: `${i}`,
-          label: `${i}(c1)`,
+          id: `G${i}_${nodeNum}`,
+          label: `G${i}_${nodeNum}`,
           x,
           y,
         });
-        continue;
-      }
-      if (i === c2) {
-        data.nodes.push({
-          id: `${i}`,
-          label: `${i}(c2)`,
-          x,
-          y,
-        });
-        continue;
-      }
-      data.nodes.push({
-        id: `${i}`,
-        label: `${i}`,
-        x,
-        y,
       });
-    }
-    i = 1;
-    while (i !== list.length) {
-      const [target, source] = list[i].split(' ');
-      data.edges.push({
-        id: `edge${i}`,
-        target,
-        source
+      item.value.forEach((edge, ei) => {
+        data.edges.push({
+          id: `G${i}_e_${ei}`,
+          target: `G${i}_${edge[0]}`,
+          source: `G${i}_${edge[1]}`
+        });
       });
       i += 1;
     }
-    return data;
-  }
-  function handleDraw () {
-    const strData = document.querySelector('#output').value;
-    if (strData && strData.length) {
-      graph.read(parseStr(strData));
-    } else {
-      alert('先随机一个数据嘛');
-    }
+    graph.changeSize(500, 500*end);
+    graph.read(data);
   }
   document.querySelector('#click').addEventListener('click', handleClick);
-  document.querySelector('#draw').addEventListener('click', handleDraw);
 </script>
 
 </html>

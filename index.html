@@ -101,7 +101,9 @@ repeat 10 ${姓}${名}
   <a class="github-fork-ribbon" href="https://github.com/muzea-demo/random-data" data-ribbon="F**k me on GitHub" title="F**k me on GitHub">F**k me on GitHub</a>
 </body>
 <script type="module">
-  import { parse, generator } from './main.mjs';
+  import { parse } from './parse.mjs'
+  import { generate } from './generate.mjs'
+  import { stringify } from './stringify.mjs'
   let initValue = '';
   initValue += 'constraint n int 5 10\n';
   initValue += 'constraint a int 1 n\n';
@@ -113,7 +115,7 @@ repeat 10 ${姓}${名}
   function handleClick() {
     const ret = parse(document.querySelector('#input').value);
     try {
-      document.querySelector('#output').value = generator(...ret);
+      document.querySelector('#output').value = stringify(generate(...ret));
     } catch (error) {
       window.alert(error);
     }

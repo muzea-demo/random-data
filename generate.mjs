@@ -150,7 +150,9 @@ function generate(list, constraint) {
       }
       case 'graph': {
         value.type = Type.graph;
-        value.value = getRandomGraph(store, constraintItem);
+        const rret = getRandomGraph(store, constraintItem);
+        value.value = rret.value;
+        value.nodeList = rret.nodeList;
         break;
       }
     }
@@ -201,7 +203,7 @@ function generate(list, constraint) {
         }
       });
     }
-    return ret;
+    return { value: ret, nodeList };
   }
 
   // 获取一个值 没有的话就随机一个
@@ -232,11 +234,14 @@ function generate(list, constraint) {
 
   function valueOfTemplate(store, template) {
     const values = [];
-    template.match(/\${(.+?)}/g).forEach((matched) => {
-      values.push(
-        getRandomValue(store, matched.slice(2, -1))
-      );
-    });
+    const matchArr = template.match(/\${(.+?)}/g);
+    if (Array.isArray(matchArr)) {
+      matchArr.forEach((matched) => {
+        values.push(
+          getRandomValue(store, matched.slice(2, -1))
+        );
+      });
+    }
     return values;
   }
 
