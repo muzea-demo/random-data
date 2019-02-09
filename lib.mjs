@@ -17,6 +17,10 @@ function isString(maybe) {
   return (typeof maybe) === 'string';
 }
 
+function isUndefined(value) {
+  return value === undefined;
+}
+
 /**
  * 
  * @param {number} min
@@ -80,7 +84,7 @@ function valueOf(expStr, getValue) {
   const env = new Proxy({}, {
     get: function(_, key){
       const value = getValue(key);
-      return (value ? value : _global[key]);
+      return (isUndefined(value) ? _global[key] : value);
     },
     has: function (_, key) {
       return true;
@@ -89,11 +93,23 @@ function valueOf(expStr, getValue) {
   return func(env);
 }
 
+const Flag = {
+  shuffle: 'shuffle',
+};
+
+const Type = {
+  int: 'int',
+  set: 'set',
+  graph: 'graph',
+};
+
 export {
   shuffleArray,
   getRandomInt,
   isString,
   valueOf,
   range,
-  splitArray
+  splitArray,
+  Flag,
+  Type,
 }

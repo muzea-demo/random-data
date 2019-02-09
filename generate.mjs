@@ -1,179 +1,4 @@
-import { shuffleArray, isString, getRandomInt, range, valueOf, splitArray } from './lib.mjs'
-
-/**
- * repeat n CONTENT
- */
-
-/**
- * repeat group n
- * repeat line
- * repeat line
- * end group
- */
-
-
-/**
- * {
- *   type: 'line'
- *   repeat: string
- *   template: string,
- * }
- * 
- * 
- * {
- *   type: 'group'
- *   repeat: string
- *   children: line[]
- * }
- * 
- * 
- */
-
-
-const Flag = {
-  shuffle: 'shuffle',
-};
-
-function parseFlag(flagPart) {
-  const ret = {};
-  if (isString(flagPart)) {
-    flagPart.split(' ').forEach((flagItem) => {
-      const key = flagItem.trim();
-      if (key) {
-        ret[key] = true;
-      }
-    });
-  }
-  return ret;
-}
-
-function isConstraint(line) {
-  return line.startsWith('constraint');
-}
-
-function isRepeat(line) {
-  return line.startsWith('repeat');
-}
-
-function isRepeatGroup(line) {
-  return line.startsWith('repeat group');
-}
-
-function isGroupEnd(line) {
-  return line.startsWith('end group');
-}
-
-const repeatGroupStartLength = 'repeat group '.length;
-
-function parse(input) {
-  const ret = [];
-  /**
-   * constraint n int lower higher | flags
-   * constraint n set values | flags
-   * constraint n graph 1 nodeNumber edgeNumber | flags
-   * @todo constraint n float lower higher length
-   * 
-   * flags   shuffle directed
-   * 
-   * key is name
-   * {
-   *   type: 'int',
-   *   lower: string,
-   *   higher: string
-   * }
-   */
-  const constraint = {};
-  function addIntConstraint(name, [lower, higher], flag) {
-    constraint[name] = {
-      lower: lower,
-      higher: higher,
-      type: 'int',
-      flag
-    };
-  }
-  function addSetConstraint(name, list, flag) {
-    constraint[name] = {
-      list: list,
-      type: 'set',
-      flag
-    };
-  }
-  function addGraphConstraint(name, [graphNum, nodeNum, edgeNum], flag) {
-    constraint[name] = {
-      graphNum,
-      nodeNum,
-      edgeNum,
-      type: 'graph',
-      flag
-    };
-  }
-  const list = input.split('\n');
-  let index = 0;
-  const end = list.length;
-  while (index !== end) {
-    const line = list[index];
-    while (true) {
-      if (isConstraint(line)) {
-        const [definePart, flagsPart] = line.split('|');
-        const [_, name, type, ...other] = definePart.split(' ');
-        const flag = parseFlag(flagsPart);
-        if (type === 'int') {
-          addIntConstraint(name, other, flag);
-          break;
-        }
-        if (type === 'set') {
-          addSetConstraint(name, other, flag);
-          break;
-        }
-        if (type === 'graph') {
-          addGraphConstraint(name, other, flag);
-          break;
-        }
-        break;
-      }
-      if (isRepeatGroup(line)) {
-        const repeat = line.substr(repeatGroupStartLength);
-        const children = [];
-        index += 1;
-        while (!isGroupEnd(list[index])) {
-          const repeatLine = list[index];
-          const repeatStart = 'repeat '.length;
-          const repeatEnd = repeatLine.indexOf(' ', repeatStart);
-          const repeat = repeatLine.substr(repeatStart, repeatEnd - repeatStart);
-          children.push({
-            template: repeatLine.substr(repeatEnd + 1),
-            repeat: repeat,
-            type: 'line'
-          });
-          index += 1;
-        }
-        ret.push(
-          {
-            type: 'group',
-            repeat: repeat,
-            children: children
-          }
-        );
-        break;
-      }
-      if (isRepeat(line)) {
-        // repeat n CONTENT
-        const repeatStart = 'repeat '.length;
-        const repeatEnd = line.indexOf(' ', repeatStart);
-        const repeat = line.substr(repeatStart, repeatEnd - repeatStart);
-        ret.push({
-          template: line.substr(repeatEnd + 1),
-          repeat: repeat,
-          type: 'line',
-        });
-        break;
-      }
-      break;
-    }
-    index += 1;
-  }
-  return [ret, constraint];
-}
+import { shuffleArray, getRandomInt, range, valueOf, splitArray, Type, Flag } from './lib.mjs'
 
 /**
  * 判断一个边是不是在边的集合里面
@@ -208,23 +33,6 @@ function getRandomSubGraph(nodeList, edgeNumber) {
   if (neededEdgeCount >= maxEdgeCount) {
     // 这里是数据错误，其实是不对的
     throw new Error('边的数量过大 无法生成图');
-    // 全联通图
-    let index = 0;
-    while (index !== nodeCount) {
-      const indexValue = nodeList[index];
-      let childIndex = index + 1;
-      while (childIndex !== nodeCount) {
-        const childValue = nodeList[childIndex];
-        if (childValue > indexValue) {
-          ret.push([indexValue, childValue])
-        } else {
-          ret.push([childValue, indexValue])
-        }
-        childIndex += 1;
-      }
-      index += 1;
-    }
-    return ret;
   }
   // 随机一个生成树出来，先整一个联通图
   const sa = shuffleArray(nodeList.slice());
@@ -280,7 +88,7 @@ function getRandomSubGraph(nodeList, edgeNumber) {
   return ret;
 }
 
-function generator(list, constraint) {
+function generate(list, constraint) {
 
   // 根据约束 产生一个随机值
   function getRandomValue(store, name) {
@@ -290,9 +98,10 @@ function generator(list, constraint) {
       return;
     }
     const constraintItem = constraint[name];
-    let value = null;
+    let value = {};
     switch (constraintItem.type) {
       case 'int': {
+        value.type = Type.int;
         const { lower, higher, flag } = constraintItem;
         const min = getValueFromString(store, lower);
         const max = getValueFromString(store, higher);
@@ -309,14 +118,15 @@ function generator(list, constraint) {
             shuffleObj.list = shuffleArray(range(min, max));
             shuffleObj.index = 0;
           }
-          value = shuffleObj.list[shuffleObj.index];
+          value.value = shuffleObj.list[shuffleObj.index];
           shuffleObj.index += 1;
         } else {
-          value = getRandomInt(min, max);
+          value.value = getRandomInt(min, max);
         }
         break;
       }
       case 'set': {
+        value.type = Type.set;
         const { list, flag } = constraintItem;
         if (flag[Flag.shuffle]) {
           const hasShuffleObj = (typeof constraintItem[Flag.shuffle]) === 'object';
@@ -331,25 +141,26 @@ function generator(list, constraint) {
             shuffleObj.list = shuffleArray(list.slice());
             shuffleObj.index = 0;
           }
-          value = shuffleObj.list[shuffleObj.index];
+          value.value = shuffleObj.list[shuffleObj.index];
           shuffleObj.index += 1;
         } else {
-          value = list[getRandomInt(0, list.length)];
+          value.value = list[getRandomInt(0, list.length)];
         }
         break;
       }
       case 'graph': {
-        value = getRandomGraph(store, constraintItem);
+        value.type = Type.graph;
+        value.value = getRandomGraph(store, constraintItem);
         break;
       }
     }
 
-    store[name] = value;
+    store[name] = value.value;
     return value;
   }
 
   function getRandomGraph(store, config) {
-    let ret = '';
+    let ret = [];
     const { nodeNum, edgeNum, graphNum } = config;
     const graphValue = getValueFromString(store, graphNum);
     const nodeValue = getValueFromString(store, nodeNum);
@@ -357,9 +168,7 @@ function generator(list, constraint) {
     const nodeList = range(1, nodeValue + 1);
     // 等一个优雅的可以指定每个图有多少边的语法
     if (graphValue > 1) {
-      getRandomSubGraph(nodeList, edgeValue).forEach((edge) => {
-        ret += `${edge[0]} ${edge[1]}\n`;
-      });
+      Array.prototype.push.apply(ret, getRandomSubGraph(nodeList, edgeValue));
     } else {
       const nodeListArr = splitArray(nodeList, graphValue);
       // 检查这个分法是不是可以满足边的约束
@@ -379,21 +188,15 @@ function generator(list, constraint) {
           return;
         }
         if (isLast) {
-          getRandomSubGraph(list, edgeValue - usedEdge).forEach((edge) => {
-            ret += `${edge[0]} ${edge[1]}\n`;
-          });
+          Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge));
         } else {
           const subRealEdge = Math.min(subMaxEdge, Math.ceil(p * subMaxEdge));
           if ((subRealEdge + usedEdge) > edgeValue) {
-            getRandomSubGraph(list, edgeValue - usedEdge).forEach((edge) => {
-              ret += `${edge[0]} ${edge[1]}\n`;
-            });
+            Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge));
             usedEdge = edgeValue;
           } else {
             usedEdge += subRealEdge;
-            getRandomSubGraph(list, subRealEdge).forEach((edge) => {
-              ret += `${edge[0]} ${edge[1]}\n`;
-            });
+            Array.prototype.push.apply(ret, getRandomSubGraph(list, subRealEdge));
           }
         }
       });
@@ -404,42 +207,63 @@ function generator(list, constraint) {
   // 获取一个值 没有的话就随机一个
   function getValue(store, name) {
     if (!store.hasOwnProperty(name)) {
-      getRandomValue(store, name);
+      return getRandomValue(store, name);
     }
-    return store[name];
+    // 模板不会引用一个老值
+    return { value: store[name] };
   }
 
+  /**
+   * 约束 或者 重复 几次
+   * 可能是数字也可能是表达式，所以要单独处理
+   * @param store 
+   * @param name 
+   */
   function getValueFromString(store, name) {
     const handler = (varName) => {
-      return getValue(store, varName);
+      const ret = getValue(store, varName);
+      if (ret) {
+        return ret.value;
+      }
+      return ret;
     };
     return valueOf(name, handler);
   }
 
   function valueOfTemplate(store, template) {
-    return template.replace(/\${(.+?)}/g, (_, name) => {
-      return getRandomValue(store, name);
+    const values = [];
+    template.match(/\${(.+?)}/g).forEach((matched) => {
+      values.push(
+        getRandomValue(store, matched.slice(2, -1))
+      );
     });
+    return values;
   }
 
   const repeator = {
     line(store, repeat, template) {
       let i = 0;
-      let ret = '';
+      let ret = [];
+      // {
+      //   template,
+      //   values: []
+      // }
       while (i !== repeat) {
-        ret += valueOfTemplate(store, template)
-        ret += '\n';
+        ret.push({
+          template,
+          values: valueOfTemplate(store, template)
+        });
         i += 1;
       }
       return ret;
     },
     group(store, repeat, children) {
       let i = 0;
-      let ret = '';
+      let ret = [];
       while (i !== repeat) {
         children.forEach((item) => {
           const repeat = getValueFromString(store, item.repeat);
-          ret += repeator.line(store, repeat, item.template);
+          Array.prototype.push.apply(ret, repeator.line(store, repeat, item.template));
         })
         i += 1;
       }
@@ -448,17 +272,17 @@ function generator(list, constraint) {
   }
 
   const store = {};
-  let ret = '';
+  let ret = [];
   list.forEach((item) => {
     switch (item.type) {
       case 'line': {
         const repeat = getValueFromString(store, item.repeat);
-        ret += repeator.line(store, repeat, item.template);
+        Array.prototype.push.apply(ret, repeator.line(store, repeat, item.template));
         break;
       }
       case 'group': {
         const repeat = getValueFromString(store, item.repeat);
-        ret += repeator.group(store, repeat, item.children);
+        Array.prototype.push.apply(ret, repeator.group(store, repeat, item.children));
         break;
       }
     }
@@ -466,4 +290,4 @@ function generator(list, constraint) {
   return ret;
 }
 
-export { parse, generator }
+export { generate }
