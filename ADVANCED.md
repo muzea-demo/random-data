@@ -64,4 +64,4 @@ constraint g graph graphNum nodeNum edgeNum
 
 示例参见 [graph](sample/graph.txt)
 
-也可以参考一个 [可视化的demo](https://muzea-demo.github.io/random-data/graph.html) 它的源码 [源码](graph.html)
+也可以参考一个 [可视化的demo](https://muzea-demo.github.io/random-data/graph.html) 它的源码 [源码](graph.html)，在输出数据有 `graph` 的时候会自动画图。
