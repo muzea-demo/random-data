@@ -1,6 +1,6 @@
 {
   "name": "random-data",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "随机数据产生姬",
   "main": "cli.js",
   "scripts": {
