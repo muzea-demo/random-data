@@ -28,9 +28,16 @@ constraint n int 1 10 | flag1 flag2
 
 ## directed
 
+**尚未实现**
+
 给 `graph` 使用，指明是有向图。
 
 但是处理联通和强联通上有些问题，所以暂时没有实现。
+
+
+## reference
+
+**目前只支持`generator`**，会保存每次随机的值，到局部变量 `ref`，可以使用类似 `ref[-1]` 的语法来访问之前的取值。
 
 # 变量的运算
 
@@ -65,3 +72,65 @@ constraint g graph graphNum nodeNum edgeNum
 示例参见 [graph](sample/graph.txt)
 
 也可以参考一个 [可视化的demo](https://muzea-demo.github.io/random-data/graph.html) 它的源码 [源码](graph.html)，在输出数据有 `graph` 的时候会自动画图。
+
+
+# generator 生成器类型
+
+指定一个表达式来生成一个数据
+
+这个类型引入了本地变量的概念，`ref`、`prev`、`index`，在这里会成为局部的保留字
+
+语法
+
+constraint g generator initValue expression
+
+- `initValue` 初始值 **第一次取值的时候仍然会用 `expression` 去求一次值**，也就是说，`initValue` 是 `ref[0]`，第一次输出的值是 `ref[1]`
+- `expression` 一个合法的、不换行的 `js_Expression` 它需要返回一个值
+
+例如
+
+```text
+constraint g generator 0 prev+index
+```
+
+## 什么是局部的保留字
+
+显然这个类型我们需要引用一些特殊的信息，比如当前处在 `列表` 的第几个，之前的值是什么样子的，所以需要在里面占用掉一些变量的名字。
+
+但是这几个变量只有在这个约束求值的时候才会存在，所以叫做局部的保留字。
+
+你仍然可以使用 `index` 作为一个约束的变量名，这不会冲突，只是在 `generator` 约束的求值中无法访问这个变量。
+
+# format 语法
+
+现在允许重写一个约束渲染时候的 `template`
+
+语法
+
+format varName template
+
+比如
+
+```text
+constraint w int 1 10
+constraint g graph graphNum nodeNum edgeNum
+format g ${value[0]} ${value[1]} ${w}
+```
+
+这样可以实现有权图，目前这个语法主要用来扩展 `graph` 类型
+
+## 影响
+
+这个信息会挂在到约束上面
+
+因为 `stringify` 的时候是没有 `format` 信息的，所以这里
+
+@todo
+
+- [ ] 如果数据挂在到约束上面 (现在的 `shuffle`) 那么多 `store` 的设计会有问题，需要修改
+- [ ] 如果不挂到约束上面，可能需要重新设计几个模块交互的api `rawTemplate` `rawValue`
+- [ ] 求值顺序 对于一个 `graph` 来说，是求完所有的边再取 `format` 计算，还是一条边算完 `format` 再算下一条边
+
+## 对其他类型
+
+可以配合 `reference` 来实现一些数据的输出
