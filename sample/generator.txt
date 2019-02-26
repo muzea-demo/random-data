@@ -1,0 +1,4 @@
+constraint prefix generator 0 index-1
+constraint fib generator 0 index===1?1:(ref[-1]+ref[-2]) | reference
+repeat 1 ${prefix} - 0
+repeat 10 ${prefix} - ${fib}

@@ -1,4 +1,4 @@
-import { shuffleArray, getRandomInt, range, valueOf, splitArray, Type, Flag } from './lib.mjs'
+import { shuffleArray, getRandomInt, range, valueOf, splitArray, Type, Flag, isUndefined } from './lib.mjs'
 
 /**
  * 判断一个边是不是在边的集合里面
@@ -98,11 +98,35 @@ function generate(list, constraint) {
       return;
     }
     const constraintItem = constraint[name];
+    if (constraintItem.type === 'generator') {
+      const { initValue } = constraintItem;
+      if (isUndefined(constraintItem.meta)) {
+        constraintItem.meta = {
+          prev: getValueFromString(store, initValue),
+          index: 0,
+        };
+      }
+    }
+    /**
+     * @todo 应该增加 init store 的方法
+     * shuffle 与 reference 应该做到 store 里面
+     */
+    const { flag } = constraintItem;
+    if (flag[Flag.reference]) {
+      if (!Array.isArray(constraintItem[Flag.reference])) {
+        constraintItem[Flag.reference] = [];
+        if (constraintItem.type === 'generator') {
+          constraintItem[Flag.reference].push(constraintItem.meta.prev);
+        } else {
+          constraintItem[Flag.reference].push(undefined);
+        }
+      }
+    }
     let value = {};
     switch (constraintItem.type) {
       case 'int': {
         value.type = Type.int;
-        const { lower, higher, flag } = constraintItem;
+        const { lower, higher } = constraintItem;
         const min = getValueFromString(store, lower);
         const max = getValueFromString(store, higher);
         if (flag[Flag.shuffle]) {
@@ -127,7 +151,7 @@ function generate(list, constraint) {
       }
       case 'set': {
         value.type = Type.set;
-        const { list, flag } = constraintItem;
+        const { list } = constraintItem;
         if (flag[Flag.shuffle]) {
           const hasShuffleObj = (typeof constraintItem[Flag.shuffle]) === 'object';
           if (!hasShuffleObj) {
@@ -155,8 +179,33 @@ function generate(list, constraint) {
         value.nodeList = rret.nodeList;
         break;
       }
+      case 'generator': {
+        value.type = Type.generator;
+        const { expression } = constraintItem;
+        const env = {
+          prev: constraintItem.meta.prev,
+          index: constraintItem.meta.index + 1,
+        };
+        if (flag[Flag.reference]) {
+          env.ref = new Proxy(constraintItem[Flag.reference], {
+            get(target, key) {
+              const index = parseInt(key, 10);
+              if (index < 0) {
+                return target[target.length + index];
+              }
+              return target[index];
+            },
+          });
+        }
+        value.value = getValueFromString(store, expression, env);
+        constraintItem.meta.prev = value.value;
+        constraintItem.meta.index = constraintItem.meta.index + 1;
+        break;
+      }
     }
-
+    if (flag[Flag.reference]) {
+      constraintItem[Flag.reference].push(value.value);
+    }
     store[name] = value.value;
     return value;
   }
@@ -222,11 +271,15 @@ function generate(list, constraint) {
   /**
    * 约束 或者 重复 几次
    * 可能是数字也可能是表达式，所以要单独处理
-   * @param store 
-   * @param name 
+   * @param {Object} store
+   * @param string name
+   * @param {Object} env 额外求值使用的对象 @hack
    */
-  function getValueFromString(store, name) {
+  function getValueFromString(store, name, env = {}) {
     const handler = (varName) => {
+      if (env.hasOwnProperty(varName)) {
+        return env[varName];
+      }
       const ret = getValue(store, varName);
       if (ret) {
         return ret.value;

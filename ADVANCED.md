@@ -39,6 +39,8 @@ constraint n int 1 10 | flag1 flag2
 
 **目前只支持`generator`**，会保存每次随机的值，到局部变量 `ref`，可以使用类似 `ref[-1]` 的语法来访问之前的取值。
 
+这里的 `ref[-1]` 会被转化成 `ref[ref.length-1]`。
+
 # 变量的运算
 
 现在的变量支持一个简单的运算啦，目前只支持 '+' '*' '-'，写起来是这个样子的
@@ -85,7 +87,7 @@ constraint g graph graphNum nodeNum edgeNum
 constraint g generator initValue expression
 
 - `initValue` 初始值 **第一次取值的时候仍然会用 `expression` 去求一次值**，也就是说，`initValue` 是 `ref[0]`，第一次输出的值是 `ref[1]`
-- `expression` 一个合法的、不换行的 `js_Expression` 它需要返回一个值
+- `expression` 一个合法的、不换行的 `js_Expression` 它需要返回一个值 （目前还需要要求表达式中间无空格）
 
 例如
 
@@ -102,6 +104,8 @@ constraint g generator 0 prev+index
 你仍然可以使用 `index` 作为一个约束的变量名，这不会冲突，只是在 `generator` 约束的求值中无法访问这个变量。
 
 # format 语法
+
+**尚未实现**
 
 现在允许重写一个约束渲染时候的 `template`
 
@@ -134,3 +138,7 @@ format g ${value[0]} ${value[1]} ${w}
 ## 对其他类型
 
 可以配合 `reference` 来实现一些数据的输出
+
+# 为什么会有尚未实现的东西
+
+我觉得这部分的设计不好，会影响到其他部分的处理或是引入很多模糊不清的东西

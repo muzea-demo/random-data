@@ -95,18 +95,21 @@ function valueOf(expStr, getValue) {
 
 const Flag = {
   shuffle: 'shuffle',
+  reference: 'reference',
 };
 
 const Type = {
   int: 'int',
   set: 'set',
   graph: 'graph',
+  generator: 'generator',
 };
 
 export {
   shuffleArray,
   getRandomInt,
   isString,
+  isUndefined,
   valueOf,
   range,
   splitArray,

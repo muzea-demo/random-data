@@ -96,6 +96,14 @@ function parse(input) {
       flag
     };
   }
+  function addGeneratorConstraint(name, [initValue, expression], flag) {
+    constraint[name] = {
+      expression,
+      initValue,
+      type: 'generator',
+      flag
+    };
+  }
   const list = input.split('\n');
   let index = 0;
   const end = list.length;
@@ -116,6 +124,10 @@ function parse(input) {
         }
         if (type === 'graph') {
           addGraphConstraint(name, other, flag);
+          break;
+        }
+        if (type === 'generator') {
+          addGeneratorConstraint(name, other, flag);
           break;
         }
         break;
