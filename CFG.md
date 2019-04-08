@@ -4,11 +4,12 @@
 template        = *[statement 1*breakLine]
 breakLine       = "\n"
 statement       = constraint | repeat
-constraint      = intConstraint | setConstraint | graphConstraint
+constraint      = intConstraint | setConstraint | graphConstraint | aliasConstraint
 intConstraint   = "constraint" ws varName ws "int" ws exp ws exp [ flagPart ]
 setConstraint   = "constraint" ws varName ws "set" ws setValues [ flagPart ]
 setValues       = stringValue [ ws setValues ]
 graphConstraint = "constraint" ws varName ws "graph" ws graphNum ws nodeNum ws edgeNum [ flagPart ]
+aliasConstraint = "constraint" ws varName ws "alias" ws varName
 flagPart        = *ws "|" *ws flags
 flags           = normalFlag|functionFlag 1*ws [ flags ]
 normalFlag      = "shuffle" | "directed"
