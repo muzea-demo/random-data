@@ -93,14 +93,29 @@ function valueOf(expStr, getValue) {
   return func(env);
 }
 
+/**
+ *
+ * @param {any[]} arr
+ * @param {any} item
+ */
+function removeItem(arr, item) {
+  const index = arr.indexOf(item);
+  if (index >= 0) {
+    arr.splice(index, 1);
+  }
+}
+
 const Flag = {
   shuffle: 'shuffle',
+  link: 'link',
+  unlink: 'unlink',
 };
 
 const Type = {
   int: 'int',
   set: 'set',
   graph: 'graph',
+  alias: 'alias',
 };
 
 export {
@@ -110,6 +125,7 @@ export {
   valueOf,
   range,
   splitArray,
+  removeItem,
   Flag,
   Type,
 }

@@ -8,7 +8,7 @@ function stringify(list) {
       const value = values[i];
       i += 1;
       switch (value.type) {
-        case Type.int: case Type.set: {
+        case Type.int: case Type.set: case Type.alias: {
           return value.value;
         }
         case Type.graph: {

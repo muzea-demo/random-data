@@ -1,0 +1,8 @@
+constraint N int 10 15
+constraint M int N 2*N
+constraint c int 1 N | shuffle
+constraint c1 alias c
+constraint c2 alias c
+constraint g graph 1 N M | unlink(c1,c2)
+repeat 1 ${N} ${M} ${c1} ${c2}
+repeat 1 ${g}

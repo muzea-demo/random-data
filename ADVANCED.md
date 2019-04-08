@@ -34,13 +34,13 @@ constraint n int 1 10 | flag1 flag2
 
 ## link
 
-给 `graph` 使用，指明两个点是相连的。
+给 `graph` 使用，指明两个点是**直接**相连的。
 
 语法类似 `link(v1,v2)`，这里不能存在空格。
 
 ## unlink
 
-给 `graph` 使用，指明两个点是不相连的。
+给 `graph` 使用，指明两个点是不**直接**相连的。
 
 语法类似 `unlink(v1,v2)`，这里不能存在空格。
 
@@ -77,3 +77,25 @@ constraint g graph graphNum nodeNum edgeNum
 示例参见 [graph](sample/graph.txt)
 
 也可以参考一个 [可视化的demo](https://muzea-demo.github.io/random-data/graph.html) 它的源码 [源码](graph.html)，在输出数据有 `graph` 的时候会自动画图。
+
+
+# alias 别名类型
+
+语法
+
+constraint aliasName alias anotherConstraintName
+
+给一个约束一个别名，别名会单独持有一次取值，起到一个类似 `reference` 的效果
+
+比如
+```
+constraint c int 1 10
+constraint c1 alias c
+constraint c2 alias c
+```
+
+用例见 [graph.unlink.txt](/sample/graph.unlink.txt)
+
+当重新对 `c1` 取值时，总是会重新取一次 c 的值。
+
+**这个语法只是一个过度方案**，后面会被 `reference` 取代。

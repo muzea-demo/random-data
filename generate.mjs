@@ -1,4 +1,4 @@
-import { shuffleArray, getRandomInt, range, valueOf, splitArray, Type, Flag } from './lib.mjs'
+import { shuffleArray, getRandomInt, range, valueOf, splitArray, removeItem, Type, Flag } from './lib.mjs'
 
 /**
  * 判断一个边是不是在边的集合里面
@@ -19,51 +19,110 @@ function maxEdge(nodeNum) {
 }
 
 /**
+ * @param {number[][]} constraint
+ * @param {number[]} edge
+ * @returns {boolean} 是否满足约束
+ */
+function checkUnlink(constraint, edge) {
+  return !constraint.some(constraintItem => constraintItem[0] === edge[0] && constraintItem[1] === edge[1]);
+}
+
+/**
  * 给定顶点的集合，边的数量，返回一个边的集合
  * 这个图是一个联通图
+ *
+ * connectivity 构建 left (被现有边集覆盖到的顶点) right (未被现有边集覆盖到的顶点)
+ *              0. 根据 nodeList 过滤出有效约束
+ *              1. 若有 link 约束 则将约束边加到边集 涉及到的点加到left 然后执行 3 否则执行 2
+ *              2. 从 right 随机挑选一个点到 left
+ *              3. 从 right 中挑选一个点 r 从 left 中挑选一个点 l
+ *              4. 检查 l r 是否符合 unlink 约束
+ *                 不符合则重新执行 3
+ *                 符合则把边 (l, r)加到返回值里面 同时把点r从right移动到left
+ *                 若此时 right 的长度为 0 则 执行 5 否则 执行 3
+ *              5. 从 left 中挑选两个点组成一个边 检查 (node1, node2) 是否符合 unlink 约束
+ *                 符合则增加一个边 (l, r) 重新执行 5 直到 选出来的边满足 edgeNumber
+ *                 不符合则重新执行 5
+ *
+ * validity unlink 目前只在加边的时候校验
+ *          link   暂无严格校验
+ *
  * @param {number[]} nodeList 顶点集合
  * @param {number} edgeNumber 边的数量
+ * @param {{[key: string]: number[][]}} staticConstraint 一些静态约束
  * @return {[number, number][]} 边的集合
  */
-function getRandomSubGraph(nodeList, edgeNumber) {
+function getRandomSubGraph(nodeList, edgeNumber, staticConstraint) {
   const ret = [];
+  const left = [];
+  const right = nodeList.slice();
   const nodeCount = nodeList.length;
   const maxEdgeCount = maxEdge(nodeCount);
   const neededEdgeCount = edgeNumber;
-  if (neededEdgeCount > maxEdgeCount) {
+  /**
+   * step 0.
+   */
+  const effectiveUnlink = staticConstraint[Flag.unlink].filter(([node1, node2]) => {
+    return nodeList.includes(node1) && nodeList.includes(node2);
+  });
+  const effectiveLink = staticConstraint[Flag.link].filter(([node1, node2]) => {
+    return nodeList.includes(node1) && nodeList.includes(node2);
+  });
+  if ((neededEdgeCount + effectiveUnlink.length) > maxEdgeCount) {
     // 这里是数据错误，其实是不对的
     throw new Error('边的数量过大 无法生成图');
   }
-  // 随机一个生成树出来，先整一个联通图
-  const sa = shuffleArray(nodeList.slice());
-  // 还未添加子节点的列表开始
-  let prevParentIndex = 0;
-  // 还未使用过的节点的开始
-  let index = 1;
-  // 剩余节点数量
-  let remainder = nodeList.length - 1;
-  while (remainder) {
-    const currentValue = sa[prevParentIndex];
-    const childCount = getRandomInt(1, remainder + 1);
-    let childIndex = 0;
-    while (childIndex !== childCount) {
-      const currentChildValue = sa[index + childIndex];
-      if (currentValue > currentChildValue) {
-        ret.push([currentChildValue, currentValue])
-      } else {
-        ret.push([currentValue, currentChildValue])
-      }
-      childIndex += 1;
-    }
-    prevParentIndex += 1;
-    remainder -= childCount;
-    index += childCount;
+  if (effectiveUnlink.length > edgeNumber) {
+    // 这里是数据错误，其实是不对的
+    throw new Error('[flag][link] 的约束过多 edgeNumber 无法满足要求');
   }
-  // 现在我们有了一个联通图了，接下来就是胡乱加边
-  // 其实我觉得可以直接完全随机出所有的边，然后随机化一下，把前面的直接挑出来用
-  // 一个图如果接近全联通的时候，随机加边的效率会比较低
-  // 度比较小的时候整出来所有的边效率会比较低
-  // 等我写完基本逻辑后对比一下 :)
+  if (effectiveLink.length) {
+    /**
+     * step 1.
+     */
+    effectiveLink.forEach((edge) => {
+      if (edge[0] > edge[1]) {
+        edge = [edge[1], edge[0]];
+      }
+      ret.push(edge);
+      left.push(edge[0], edge[1]);
+      removeItem(right, edge[0]);
+      removeItem(right, edge[1]);
+      edgeCount += 1;
+    });
+  } else {
+    /**
+     * step 2.
+     */
+    const pickMe = getRandomInt(0, right.length);
+    /**
+     * @todo 这里存在一个问题，有可能选出来的这个点无法和剩下的点组成边
+     */
+    left.push(right[pickMe]);
+    right.splice(pickMe, 1);
+  }
+  shuffleArray(right);
+  let whileCount = 0;
+  while (neededEdgeCount > ret.length && right.length && whileCount < 233) {
+    whileCount += 1;
+    /**
+     * step 3-4.
+     * @todo 这里也存在问题 可能会频繁取到无法组成边的点
+     */
+    const rightNode = right[0];
+    const pickMe = getRandomInt(0, left.length);
+    const leftNode = left[pickMe];
+    const edge = [leftNode, rightNode].sort((a, b) => a - b);
+    if (!checkUnlink(effectiveUnlink, edge)) {
+      continue;
+    }
+    ret.push(edge);
+    left.push(rightNode);
+    right.shift();
+  }
+  if (whileCount === 233) {
+    throw new Error('循环过多 应该是bug');
+  }
   while (neededEdgeCount > ret.length) {
     let i1;
     let i2;
@@ -73,17 +132,14 @@ function getRandomSubGraph(nodeList, edgeNumber) {
     } else {
       i2 = getRandomInt(i1 + 1, nodeCount)
     }
-    const v1 = nodeList[i1];
-    const v2 = nodeList[i2];
-    const edge = [];
-    if (v1 > v2) {
-      edge.push(v2, v1);
-    } else {
-      edge.push(v1, v2);
+    const edge = [left[i1], left[i2]].sort((a, b) => a - b);
+    if (hasEdge(ret, edge)) {
+      continue;
     }
-    if (!hasEdge(ret, edge)) {
-      ret.push(edge);
+    if (!checkUnlink(effectiveUnlink, edge)) {
+      continue;
     }
+    ret.push(edge);
   }
   return ret;
 }
@@ -155,6 +211,12 @@ function generate(list, constraint) {
         value.nodeList = rret.nodeList;
         break;
       }
+      case 'alias': {
+        value.type = Type.alias;
+        const rret = getRandomValue(store, constraintItem.aliasName);
+        value.value = rret.value;
+        break;
+      }
     }
 
     store[name] = value.value;
@@ -163,14 +225,32 @@ function generate(list, constraint) {
 
   function getRandomGraph(store, config) {
     let ret = [];
-    const { nodeNum, edgeNum, graphNum } = config;
+    const { nodeNum, edgeNum, graphNum, flag } = config;
     const graphValue = getValueFromString(store, graphNum);
     const nodeValue = getValueFromString(store, nodeNum);
     const edgeValue = getValueFromString(store, edgeNum);
     const nodeList = range(1, nodeValue + 1);
+    const staticConstraint = {
+      [Flag.link]: [],
+      [Flag.unlink]: [],
+    };
+    if (Array.isArray(flag[Flag.link])) {
+      flag[Flag.link].forEach(([n1, n2]) => {
+        const node1 = getValueFromString(store, n1);
+        const node2 = getValueFromString(store, n2);
+        staticConstraint[Flag.link].push([node1, node2].sort((a, b) => a - b));
+      });
+    }
+    if (Array.isArray(flag[Flag.unlink])) {
+      flag[Flag.unlink].forEach(([n1, n2]) => {
+        const node1 = getValueFromString(store, n1);
+        const node2 = getValueFromString(store, n2);
+        staticConstraint[Flag.unlink].push([node1, node2].sort((a, b) => a - b));
+      });
+    }
     // 等一个优雅的可以指定每个图有多少边的语法
     if (graphValue === 1) {
-      Array.prototype.push.apply(ret, getRandomSubGraph(nodeList, edgeValue));
+      Array.prototype.push.apply(ret, getRandomSubGraph(nodeList, edgeValue, staticConstraint));
     } else {
       const nodeListArr = splitArray(nodeList, graphValue);
       // 检查这个分法是不是可以满足边的约束
@@ -193,16 +273,16 @@ function generate(list, constraint) {
           throw new Error('每一个子图都应该是联通的');
         }
         if (isLast) {
-          Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge));
+          Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge, staticConstraint));
         } else {
           let subRealEdge = Math.min(subMaxEdge, Math.floor(p * subMaxEdge));
           subRealEdge = Math.max(subRealEdge, list.length - 1);
           if ((subRealEdge + usedEdge) > edgeValue) {
-            Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge));
+            Array.prototype.push.apply(ret, getRandomSubGraph(list, edgeValue - usedEdge, staticConstraint));
             usedEdge = edgeValue;
           } else {
             usedEdge += subRealEdge;
-            Array.prototype.push.apply(ret, getRandomSubGraph(list, subRealEdge));
+            Array.prototype.push.apply(ret, getRandomSubGraph(list, subRealEdge, staticConstraint));
           }
         }
       });

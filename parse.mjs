@@ -1,27 +1,12 @@
 import { isString } from './lib.mjs'
 
 /**
- * repeat n CONTENT
  * 
- * repeat group n
- * repeat line
- * repeat line
- * end group
- * 
- * 
- * {
- *   type: 'line'
- *   repeat: string
- *   template: string,
- * }
- * 
- * {
- *   type: 'group'
- *   repeat: string
- *   children: line[]
- * }
- * 
+ * @param {string} str
  */
+function isFunctionFlag (str) {
+  return str.includes('(')
+}
 
 function parseFlag(flagPart) {
   const ret = {};
@@ -29,7 +14,16 @@ function parseFlag(flagPart) {
     flagPart.split(' ').forEach((flagItem) => {
       const key = flagItem.trim();
       if (key) {
-        ret[key] = true;
+        if (isFunctionFlag(key)) {
+          const preStr = key.replace(/[(),]/g, ' ')
+          const [flagName, ...param] = preStr.split(' ')
+          if (!Array.isArray(ret[flagName])) {
+            ret[flagName] = []
+          }
+          ret[flagName].push(param)
+        } else {
+          ret[key] = true;
+        }
       }
     });
   }
@@ -96,6 +90,12 @@ function parse(input) {
       flag
     };
   }
+  function addAliasConstraint(name, aliasName) {
+    constraint[name] = {
+      aliasName,
+      type: 'alias',
+    };
+  }
   const list = input.split('\n');
   let index = 0;
   const end = list.length;
@@ -116,6 +116,10 @@ function parse(input) {
         }
         if (type === 'graph') {
           addGraphConstraint(name, other, flag);
+          break;
+        }
+        if (type === 'alias') {
+          addAliasConstraint(name, other[0]);
           break;
         }
         break;
