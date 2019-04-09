@@ -38,10 +38,10 @@ function checkUnlink(constraint, edge) {
  *              3. 从 right 中挑选一个点 r 从 left 中挑选一个点 l
  *              4. 检查 l r 是否符合 unlink 约束
  *                 不符合则重新执行 3
- *                 符合则把边 (l, r)加到返回值里面 同时把点r从right移动到left
+ *                 符合则把边 (l, r) 加到返回值里面 同时把点 r 从 right 移动到 left
  *                 若此时 right 的长度为 0 则 执行 5 否则 执行 3
  *              5. 从 left 中挑选两个点组成一个边 检查 (node1, node2) 是否符合 unlink 约束
- *                 符合则增加一个边 (l, r) 重新执行 5 直到 选出来的边满足 edgeNumber
+ *                 符合则增加一个边 (node1, node2) 重新执行 5 直到 选出来的边满足 edgeNumber
  *                 不符合则重新执行 5
  *
  * validity unlink 目前只在加边的时候校验
@@ -103,7 +103,7 @@ function getRandomSubGraph(nodeList, edgeNumber, staticConstraint) {
   }
   shuffleArray(right);
   let whileCount = 0;
-  while (neededEdgeCount > ret.length && right.length && whileCount < 233) {
+  while (right.length && whileCount < 233) {
     whileCount += 1;
     /**
      * step 3-4.
