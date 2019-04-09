@@ -37,7 +37,7 @@
   initValue += 'constraint c1 alias c\n';
   initValue += 'constraint c2 alias c\n';
   initValue += 'constraint g graph 1 N M | unlink(c1,c2)\n';
-  initValue += 'repeat 1 ${N} ${M} ${c} ${c}\n';
+  initValue += 'repeat 1 ${N} ${M} ${c1} ${c2}\n';
   initValue += 'repeat 1 ${g}\n';
   document.querySelector('#input').value = initValue;
   function handleClick() {
