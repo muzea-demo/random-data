@@ -1,8 +1,15 @@
 {
-  "name": "random-data",
-  "version": "0.0.3",
+  "name": "@woodenfish/random-data",
+  "version": "0.0.4",
   "description": "随机数据产生姬",
   "main": "cli.js",
+  "bin": {
+    "random-data": "./wrap.js"
+  },
+  "files": [
+    "*.mjs",
+    "*.js"
+  ],
   "scripts": {
     "random": "node --experimental-modules ./cli.mjs",
     "test": "node --experimental-modules ./test.mjs"
@@ -12,7 +19,7 @@
     "url": "git+https://github.com/muzea-demo/random-data.git"
   },
   "engines": {
-    "node" : ">=8"
+    "node": ">=8"
   },
   "author": "muzea <mr.muzea@gmail.com>",
   "license": "MIT",
