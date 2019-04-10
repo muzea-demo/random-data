@@ -1,6 +1,6 @@
 {
   "name": "@woodenfish/random-data",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "随机数据产生姬",
   "main": "cli.js",
   "bin": {
@@ -26,5 +26,6 @@
   "bugs": {
     "url": "https://github.com/muzea-demo/random-data/issues"
   },
-  "homepage": "https://github.com/muzea-demo/random-data#readme"
+  "homepage": "https://github.com/muzea-demo/random-data#readme",
+  "keywords": ["javascript", "template-string", "online-judge", "random"]
 }

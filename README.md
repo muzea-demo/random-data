@@ -2,6 +2,8 @@
 
 这是一个字符串拼接工具，可以用于OJ的测试数据生成， [点我在线体验](https://muzea-demo.github.io/random-data/)。
 
+cli 工具用法见 [cli使用指北](BIN.md)
+
 - [语法](#语法)
   - [constraint 的语法](#constraint-的语法)
     - [int类型](#int类型)
